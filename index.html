@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light}[hidden]{display:none!important}</style>
+<title>Кейсбук</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Literata:opsz,wght@7..72,500;7..72,700&family=Onest:wght@400;500;600&display=swap">
+<style>
+  /* Layout: узкая колонка-указатель. Каждый кейс строка с главной цифрой справа, по клику раскрывается в Задача / Решение / Результат. */
+  :root {
+    --bg: #F2F5F6;
+    --fg: #13222A;
+    --muted: #55666E;
+    --line: #D3DCDF;
+    --accent: #0A6C74;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #DDEEF0;
+    --font-display: 'Literata', Georgia, 'Times New Roman', serif;
+    --font-body: 'Onest', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1619;
+      --fg: #E4EEF0;
+      --muted: #8FA3AA;
+      --line: #25363C;
+      --accent: #5CC4CC;
+      --accent-ink: #06191C;
+      --accent-soft: #163239;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1619;
+    --fg: #E4EEF0;
+    --muted: #8FA3AA;
+    --line: #25363C;
+    --accent: #5CC4CC;
+    --accent-ink: #06191C;
+    --accent-soft: #163239;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    padding-block: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding-block: 28px 56px;
+  }
+
+  .brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero { padding-block: 40px 28px; }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 6.5vw, 3.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    max-width: 16ch;
+    text-wrap: balance;
+  }
+  .hero p {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+  .flow {
+    margin-top: 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block: 12px 8px;
+  }
+  .chip {
+    font: inherit;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .chip:hover { border-color: var(--accent); }
+  .chip[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+  .chip:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .count {
+    margin: 0 0 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cases { border-bottom: 1px solid var(--line); }
+  .case { border-top: 1px solid var(--line); }
+
+  summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 28px;
+    grid-template-areas: "main metric tog";
+    gap: 8px 24px;
+    align-items: center;
+    padding-block: 24px;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  .main { grid-area: main; min-width: 0; }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .case h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 1.375rem;
+    line-height: 1.25;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .metric {
+    grid-area: metric;
+    text-align: right;
+    min-width: 0;
+  }
+  .metric strong {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 1.1;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .metric span {
+    display: block;
+    max-width: 18ch;
+    margin-left: auto;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .tog {
+    grid-area: tog;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+  }
+  .tog::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.2s;
+  }
+  details[open] .tog::before { transform: translateY(2px) rotate(-135deg); }
+  summary:hover .tog::before { border-color: var(--accent); }
+
+  .body {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    padding-bottom: 20px;
+  }
+  .col { min-width: 0; }
+  .col h3 {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  .col p { margin: 0; }
+  .col.result {
+    background: var(--accent-soft);
+    padding: 14px 16px;
+    border-radius: 2px;
+  }
+  .col.result h3 { color: var(--accent); }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 28px;
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  .tags li {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 3px 8px;
+  }
+
+  footer {
+    padding-top: 28px;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 60ch;
+  }
+
+  @media (max-width: 640px) {
+    summary {
+      grid-template-columns: minmax(0, 1fr) 28px;
+      grid-template-areas: "main tog" "metric metric";
+      gap: 12px 16px;
+      align-items: start;
+    }
+    .metric { text-align: left; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .metric span { margin-left: 0; max-width: none; }
+    .body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chip, .tog::before { transition: none; }
+  }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <div class="brand">Кейсбук</div>
+
+  <header class="hero">
+    <h1>Шесть проектов, шесть результатов</h1>
+    <p>Короткие разборы: с чем пришёл клиент, что сделали и что изменилось в цифрах. Нажмите на кейс, чтобы увидеть подробности.</p>
+    <div class="flow">Задача → Решение → Результат</div>
+  </header>
+
+  <div class="filters" role="group" aria-label="Фильтр по сфере">
+    <button class="chip" type="button" data-filter="all" aria-pressed="true">Все</button>
+    <button class="chip" type="button" data-filter="E-commerce" aria-pressed="false">E-commerce</button>
+    <button class="chip" type="button" data-filter="Мобильные приложения" aria-pressed="false">Мобильные приложения</button>
+    <button class="chip" type="button" data-filter="Услуги" aria-pressed="false">Услуги</button>
+    <button class="chip" type="button" data-filter="B2B" aria-pressed="false">B2B</button>
+    <button class="chip" type="button" data-filter="Образование" aria-pressed="false">Образование</button>
+    <button class="chip" type="button" data-filter="Локальный бизнес" aria-pressed="false">Локальный бизнес</button>
+  </div>
+  <p class="count" id="count" aria-live="polite">Показано: 6 из 6</p>
+
+  <main class="cases" id="cases">
+
+    <article class="case" data-cat="E-commerce">
+      <details open>
+        <summary>
+          <div class="main">
+            <div class="meta">E-commerce · 6 недель</div>
+            <h2>Магазин кофе «Зерно»: меньше брошенных корзин</h2>
+          </div>
+          <div class="metric"><strong>+34%</strong><span>конверсия из корзины в заказ</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Покупатели клали кофе в корзину, но каждый второй уходил на шаге доставки. Трафика хватало, заказов не было.</p></div>
+          <div class="col"><h3>Решение</h3><p>Разобрали записи сессий и нашли три помехи: обязательную регистрацию, скрытую цену доставки и длинную форму адреса. Убрали регистрацию, показали доставку в корзине, оставили в форме четыре поля.</p></div>
+          <div class="col result"><h3>Результат</h3><p>Конверсия выросла с 41% до 55%. Средний чек остался прежним, а повторные заказы пошли уже в первые две недели.</p></div>
+        </div>
+        <ul class="tags"><li>Корзина</li><li>Веб-аналитика</li><li>A/B-тест</li></ul>
+      </details>
+    </article>
+
+    <article class="case" data-cat="Мобильные приложения">
+      <details>
+        <summary>
+          <div class="main">
+            <div class="meta">Мобильные приложения · 10 недель</div>
+            <h2>Доставка продуктов «Корзинка»: повторный заказ в два касания</h2>
+          </div>
+          <div class="metric"><strong>4:10 → 1:50</strong><span>время оформления заказа</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Повторный заказ занимал больше четырёх минут, хотя большинство покупателей каждую неделю берут почти одно и то же.</p></div>
+          <div class="col"><h3>Решение</h3><p>Вынесли на главный экран кнопку «Повторить прошлый заказ», сохранили адрес и способ оплаты, убрали подтверждение, которое не влияло на решение.</p></div>
+          <div class="col result"><h3>Результат</h3><p>Оформление сократилось с 4:10 до 1:50. Доля повторных заказов за месяц выросла с 38% до 49%.</p></div>
+        </div>
+        <ul class="tags"><li>UX</li><li>iOS</li><li>Android</li></ul>
+      </details>
+    </article>
+
+    <article class="case" data-cat="Услуги">
+      <details>
+        <summary>
+          <div class="main">
+            <div class="meta">Услуги · 12 недель</div>
+            <h2>Клиника «Улыбка»: заявки из поиска, а не только с рекламы</h2>
+          </div>
+          <div class="metric"><strong>×2,3</strong><span>заявок из органического поиска</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Сайт выглядел хорошо, но заявки приходили почти только с рекламы. Из поиска не приходил никто.</p></div>
+          <div class="col"><h3>Решение</h3><p>Собрали запросы по 40 услугам и сделали для каждой отдельную страницу с ценами и ответами на вопросы пациентов. Добавили карточки врачей со стажем и отзывами.</p></div>
+          <div class="col result"><h3>Результат</h3><p>Через три месяца заявок из поиска стало в 2,3 раза больше, расходы на рекламу снизились на 22%.</p></div>
+        </div>
+        <ul class="tags"><li>SEO</li><li>Контент</li><li>Посадочные страницы</li></ul>
+      </details>
+    </article>
+
+    <article class="case" data-cat="B2B">
+      <details>
+        <summary>
+          <div class="main">
+            <div class="meta">B2B · 5 месяцев</div>
+            <h2>Складской сервис «Паллета»: учёт без таблиц</h2>
+          </div>
+          <div class="metric"><strong>−62%</strong><span>ошибок при инвентаризации</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Склад вёл учёт в таблицах. После каждой инвентаризации находили расхождения, на разбор уходило до двух рабочих дней.</p></div>
+          <div class="col"><h3>Решение</h3><p>Сделали веб-сервис: штрихкоды сканируются камерой телефона, остатки обновляются сразу. Настроили выгрузку в бухгалтерскую программу.</p></div>
+          <div class="col result"><h3>Результат</h3><p>Расхождений стало меньше на 62%. Инвентаризация занимает полдня вместо двух.</p></div>
+        </div>
+        <ul class="tags"><li>Продукт</li><li>Интеграции</li><li>Склад</li></ul>
+      </details>
+    </article>
+
+    <article class="case" data-cat="Образование">
+      <details>
+        <summary>
+          <div class="main">
+            <div class="meta">Образование · 8 недель</div>
+            <h2>Онлайн-школа «Лексика»: ученики доходят до третьего месяца</h2>
+          </div>
+          <div class="metric"><strong>41% → 58%</strong><span>учеников доходят до третьего месяца</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Больше половины новичков бросали курс в первый месяц, и школа каждый раз тратилась на привлечение заново.</p></div>
+          <div class="col"><h3>Решение</h3><p>Построили первую неделю из коротких заданий по 10 минут, добавили еженедельный отчёт о прогрессе и напоминания в мессенджере.</p></div>
+          <div class="col result"><h3>Результат</h3><p>До третьего месяца стали доходить 58% учеников вместо 41%.</p></div>
+        </div>
+        <ul class="tags"><li>Онбординг</li><li>Рассылки</li><li>Удержание</li></ul>
+      </details>
+    </article>
+
+    <article class="case" data-cat="Локальный бизнес">
+      <details>
+        <summary>
+          <div class="main">
+            <div class="meta">Локальный бизнес · 3 недели</div>
+            <h2>Пекарня «Печь»: заказы на утро через сайт</h2>
+          </div>
+          <div class="metric"><strong>0 → 120</strong><span>заказов в месяц через сайт</span></div>
+          <span class="tog" aria-hidden="true"></span>
+        </summary>
+        <div class="body">
+          <div class="col"><h3>Задача</h3><p>Пекарня принимала заказы по телефону, и часть звонков терялась в утренний час пик.</p></div>
+          <div class="col"><h3>Решение</h3><p>Запустили одностраничный сайт с меню, выбором времени получения и оплатой при самовывозе. Добавили ссылку на сайт в карточку на картах.</p></div>
+          <div class="col result"><h3>Результат</h3><p>Через два месяца через сайт приходило около 120 заказов в месяц, а телефонных звонков стало на треть меньше.</p></div>
+        </div>
+        <ul class="tags"><li>Сайт-визитка</li><li>Карты</li><li>Самовывоз</li></ul>
+      </details>
+    </article>
+
+  </main>
+
+  <footer>Названия и цифры в кейсах придуманы для примера. Замените их своими проектами, и страница останется такой же.</footer>
+</div>
+
+<script>
+  (function () {
+    var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+    var cases = Array.prototype.slice.call(document.querySelectorAll('.case'));
+    var count = document.getElementById('count');
+
+    function apply(filter) {
+      var shown = 0;
+      cases.forEach(function (c) {
+        var match = filter === 'all' || c.getAttribute('data-cat') === filter;
+        c.hidden = !match;
+        if (match) shown += 1;
+      });
+      chips.forEach(function (b) {
+        b.setAttribute('aria-pressed', b.getAttribute('data-filter') === filter ? 'true' : 'false');
+      });
+      count.textContent = 'Показано: ' + shown + ' из ' + cases.length;
+    }
+
+    chips.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.getAttribute('data-filter')); });
+    });
+  })();
+</script>
+</body>
+</html>
